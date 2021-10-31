@@ -105,7 +105,7 @@ export default new Command(
       confirmationCode
     }
     await confirmationRepository.saveOrUpdate(confirmationEntity);
-    MailUtils.sendConfirmationCode(/*inputEmail*/"btot@tvz.hr", confirmationCode);
+    MailUtils.sendConfirmationCode(inputEmail, confirmationCode);
     let infoTitle = ':ballot_box_with_check: Poslan potvrdni kod na email :ballot_box_with_check:';
     let infoDescription = `Poslali smo potvrdni kod na "**${inputEmail}**".\nDobiveni potvrdni kod zalijepite na sljedećem koraku verifikacije unutar naredbe "**/code <potvrdni-kod>**"`;
     let embed = buildInfoEmbed(infoTitle, infoDescription);
