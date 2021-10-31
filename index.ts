@@ -6,6 +6,10 @@ import StringUtils from './util/StringUtils';
 import StudentRepository from './repository/StudentRepository';
 dotenv.config();
 
+process.on('uncaughtException', function (err) {
+  console.log('Caught exception: ' + err);
+});
+
 (async function() {
   await import('./service/DatabaseService');
   let events = await Event.getConfiguredEvents();

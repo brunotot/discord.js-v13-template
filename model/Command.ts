@@ -6,7 +6,7 @@ const COMMAND_HANDLERS_FOLDER = "./../commandhandler";
 
 class Command {
   config: any;
-  callback: (options: CommandInteraction<CacheType>) => any;
+  callback: (options: CommandInteraction<CacheType>) => Promise<any>;
 
   constructor(
     config: any,
