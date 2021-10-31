@@ -1,3 +1,3 @@
 export enum CommandName {
-  ADD = 'add'
+  EMAIL = 'email'
 }

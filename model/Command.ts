@@ -1,16 +1,16 @@
-import { ApplicationCommandDataResolvable, CommandInteractionOptionResolver } from "discord.js";
+import { CacheType, CommandInteraction } from "discord.js";
 import path from 'path';
 import fs from 'fs';
 
 const COMMAND_HANDLERS_FOLDER = "./../commandhandler";
 
 class Command {
-  config: ApplicationCommandDataResolvable;
-  callback: (options: CommandInteractionOptionResolver) => any;
+  config: any;
+  callback: (options: CommandInteraction<CacheType>) => any;
 
   constructor(
-    config: ApplicationCommandDataResolvable,
-    callback: (options: CommandInteractionOptionResolver) => any
+    config: any,
+    callback: (interaction: CommandInteraction<CacheType>) => any
   ) {
     this.config = config;
     this.callback = callback;
