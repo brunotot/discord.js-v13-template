@@ -4,11 +4,14 @@ import discordClientService from "../service/DiscordClientService";
 import Command from "../model/Command";
 import studentRepository from "../repository/StudentRepository";
 import discordUserRepository from "../repository/DiscordUserRepository";
-import { ApplicationCommandResolvable } from "discord.js";
+const GUILD_ID = process.env.GUILD_ID!;
 const { client } = discordClientService;
 
 export default new Event(EventName.READY, async () => {
-  const guild = client.guilds.cache.get(process.env.GUILD_ID!)!;
+  let guild = client.guilds.cache.get(GUILD_ID)!;
+  if (!guild) {
+    guild = await client.guilds.fetch(GUILD_ID);
+  }
   discordClientService.guild = guild;
   let { commands } = guild ? guild : client.application!;
   let configuredCommands = await Command.getConfiguredCommands();
