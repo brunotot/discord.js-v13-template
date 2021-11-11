@@ -1,3 +1,5 @@
 export enum CommandName {
-  EMAIL = 'email'
+  EMAIL = 'email',
+  CODE = 'code',
+  ANON = 'anon'
 }

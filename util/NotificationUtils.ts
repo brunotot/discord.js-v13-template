@@ -2,7 +2,10 @@ const TVZ_NOTIFICATION_LETTERS_MAP: { [key: string]: string } = {
   '&nbsp;': ' ',
   'Å¾': 'ž',
   'Ä‡': 'ć',
+  'Ä': 'č',
+  'Ä': 'ć',
   'Ä ': 'č',
+  'Ä\n': 'č',
   'è': 'č',
   'Å¡': 'š',
   'Ä‘': 'đ'
@@ -85,7 +88,9 @@ function extractDiscordChannelNamesFromKolegijString(kolegij: string): {newValue
       .toLowerCase();
     namesMap[newValue] = originalValue;
   }
-  return Object.entries(namesMap).map(([newValue, originalValue]) => ({newValue, originalValue}));
+  return Object
+    .entries(namesMap)
+    .map(([newValue, originalValue]) => ({newValue, originalValue}));
 }
 
 function getKeyByValue(object: {[key: string]: string}, value: string): string {
@@ -111,17 +116,25 @@ function getGlobalRegex(regexString: string) {
   return new RegExp(regexString, 'g');
 }
 
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+}
+
+function replaceAll(occurence: string, replacement: string, string: string): string {
+  return string.replace(
+    new RegExp(escapeRegExp(occurence), 'g'), 
+    replacement
+  )
+}
+
 function decodeNotificationText(text: string) {
   return !text ? '' : Object
     .keys(TVZ_NOTIFICATION_LETTERS_MAP)
     .reduce(
-      (accum, key) => accum.replace(
-        new RegExp(key, 'g'), 
-        TVZ_NOTIFICATION_LETTERS_MAP[key]
-      ), 
+      (accum, key) => accum = replaceAll(key, TVZ_NOTIFICATION_LETTERS_MAP[key], accum),
       text
     )
-    .replace(/ +(?= )/g, '')
+    .replace(/ +(?= )/g, '');
 }
 
 const NotificationUtils = {
@@ -131,7 +144,8 @@ const NotificationUtils = {
   getIndicesOfSubstring,
   extractDiscordChannelNamesFromKolegijString,
   getKeyByValue,
-  convertTvzDateDisplayToJavascriptDate
+  convertTvzDateDisplayToJavascriptDate,
+  replaceAll
 }
 
 export default NotificationUtils;

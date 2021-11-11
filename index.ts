@@ -1,4 +1,5 @@
-import dotenv from 'dotenv'; dotenv.config();
+import dotenv from 'dotenv'; 
+dotenv.config();
 import discordClientService from './service/DiscordClientService'
 import Event from './model/Event';
 import schedule from 'node-schedule';

@@ -15,8 +15,8 @@ class StudentRepository extends BaseRepository<IStudent, String> {
    * @param force true, if refresh should happen even if data already exists
    */
   updateStudentsData: (force?: boolean) => Promise<void> = async (force: boolean = false) => {
-    if (force || await this.countAll() === 0) {
-      await this.removeAll();
+    if (force || await this.isEmpty()) {
+      await this.deleteAll();
       let dateNow = new Date();
       dateNow.setMinutes(dateNow.getMinutes() + 30);
       let hh = dateNow.getHours();

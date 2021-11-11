@@ -1,31 +1,26 @@
 import { Interaction } from "discord.js";
 import { EventName } from "./EventName";
-import path from 'path';
-import fs from 'fs';
+import ImportUtils from "../util/ImportUtils";
 
 const EVENT_HANDLERS_FOLDER = "./../eventhandler";
 
 export default class Event {
+  private static configuredEvents: Event[] = [];
   eventName!: EventName;
-  callback: (interaction: Interaction) => any
+  callback: (interaction: Interaction) => void
 
   constructor(
-    eventName: EventName, 
-    callback: (interaction: Interaction) => any
+    eventName: EventName,
+    callback: (interaction: Interaction) => void
   ) {
     this.eventName = eventName;
     this.callback = callback;
   }
 
   static async getConfiguredEvents(): Promise<Event[]> {
-    let configuredEvents: Event[] = [];
-    const normalizedPathEventHandlerFolder = path.join(__dirname, EVENT_HANDLERS_FOLDER);
-    let eventHandlerFiles = fs.readdirSync(normalizedPathEventHandlerFolder);
-    for (let eventHandlerFile of eventHandlerFiles) {
-      let eventFileLocation = `${EVENT_HANDLERS_FOLDER}/${eventHandlerFile}`;
-      const res = await import(eventFileLocation);
-      configuredEvents.push(res.default);
-    }
+    if (Event.configuredEvents.length > 0) return Event.configuredEvents;
+    let configuredEvents = await ImportUtils.getConfiguredImports<Event>(EVENT_HANDLERS_FOLDER);
+    Event.configuredEvents = configuredEvents;
     return configuredEvents;
   }
 }

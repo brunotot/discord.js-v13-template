@@ -5,7 +5,8 @@ import NotificationUtils from '../util/NotificationUtils';
 import discordClientService from './DiscordClientService';
 
 const NEW_NOTIFICATION_FLAG = 'Nova vijest na stranicama tvz.hr';
-const TVZ_WEBADMIN_MAIL = 'webadmin@tvz.hr';
+//const TVZ_WEBADMIN_MAIL = 'webadmin@tvz.hr';
+const TVZ_WEBADMIN_MAIL = 'brunotot10000@gmail.com';
 const TITLE_FLAG = 'Naslov:';
 const TEXT_FLAG = 'Tekst:';
 const DATE_CREATED_FLAG = 'Datum objave:';
@@ -39,6 +40,8 @@ export default function() {
           let dateCreated: {dateAsString: string, date: Date} = NotificationUtils.convertTvzDateDisplayToJavascriptDate(dateCreatedString, true);
           let dateEnding: {dateAsString: string, date: Date} = NotificationUtils.convertTvzDateDisplayToJavascriptDate(dateEndingString, false);
 
+          console.log(text);
+
           let discordChannelNameGroups: {newValue: string, originalValue: string}[] = NotificationUtils.extractDiscordChannelNamesFromKolegijString(kolegij);
           for (let discordChannelNameGroup of discordChannelNameGroups) {
             let { originalValue: originalKolegijName, newValue: discordChannelName } = discordChannelNameGroup;
@@ -51,7 +54,7 @@ export default function() {
                 .addField('Datum stvaranja obavijesti', dateCreated.dateAsString, true)
                 .addField('Datum isteka obavijesti', dateEnding.dateAsString, true)
                 .setURL(url)
-              await discordClientService.sendNotification(textChannel, embed)
+              //await discordClientService.sendNotification(textChannel, embed)
             } else {
               console.log("Nije moguce pronaci kanal pod nazivom: " + discordChannelName);
             }

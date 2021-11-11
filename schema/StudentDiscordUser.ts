@@ -16,10 +16,23 @@ export interface IStudentDiscordUser {
 }
 
 export const studentDiscordUserCompositeKeySchema = new Schema({
-  _id: false,
-  discordId: {type: String, required: true, index: true, unique: true},
-  email: {type: String, required: true, index: true, unique: true}
-} as any)
+  _id: {
+    type: Boolean,
+    required: false
+  },
+  discordId: {
+    type: String, 
+    required: true, 
+    index: true, 
+    unique: true
+  },
+  email: {
+    type: String, 
+    required: true, 
+    index: true, 
+    unique: true
+  }
+})
 
 export const studentDiscordUserSchema = new Schema({
   _id: studentDiscordUserCompositeKeySchema,

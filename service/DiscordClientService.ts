@@ -2,6 +2,7 @@ import DiscordJS, { Intents, MessageEmbed, TextChannel } from 'discord.js'
 import Event from '../model/Event';
 import { Role } from '../model/Role';
 import { IDiscordUser } from '../schema/DiscordUser';
+import NotificationUtils from '../util/NotificationUtils';
 
 class DiscordClientService {
   guild!: DiscordJS.Guild;
@@ -21,14 +22,42 @@ class DiscordClientService {
     })
   }
 
-  normalizeChannelName = (channelName: string = ''): string => {
-    let re = new RegExp(' ', 'g');
-    return channelName.replace(re, '-').toLowerCase();
+  async getGuildMemberById(memberId: string): Promise<DiscordJS.GuildMember | undefined> {
+    return await this.guild.members.fetch(memberId);
   }
 
-  getChannelByName(channelName: string): TextChannel | null {
+  async setUserNickname(memberId: string, nickname: string) {
+    let member = await this.getGuildMemberById(memberId);
+    await member?.setNickname(nickname);
+  }
+
+  async setUserRole(memberId: string, role: Role) {
+    let member = await this.getGuildMemberById(memberId);
+    let roleDiscord = await this.getDiscordRoleByRole(role);
+    await member?.roles.add(roleDiscord);
+  }
+
+  async getDiscordRoleByRole(role: Role): Promise<DiscordJS.Role> {
+    return await this.guild.roles.fetch(role) as DiscordJS.Role;
+  }
+
+  normalizeChannelName = (channelName: string = ''): string => {
+    let regex = NotificationUtils.getGlobalRegex(' ');
+    let replacement = '-';
+    return channelName
+      .replace(regex, replacement)
+      .toLowerCase();
+  }
+
+  async getChannelByName(channelName: string): Promise<TextChannel | null> {
     let normalizedChannelName: string = this.normalizeChannelName(channelName);
-    let channel = this.guild.channels.cache.find(c => c.name === normalizedChannelName);
+    let guildChannelManager = this.guild.channels;
+    let cache = guildChannelManager.cache;
+    let channel = cache.find(c => c.name === normalizedChannelName);
+    if (!cache.hasAny()) {
+      let allChannels = await guildChannelManager.fetch();
+      channel = allChannels.find(c => c.name === normalizedChannelName);
+    }
     return channel ? channel as TextChannel : null;
   }
 
@@ -43,18 +72,27 @@ class DiscordClientService {
     let isAlreadyQueuedNotification: boolean = !!this.notifications.find(o => o.title === title && o.text === text);
     if (!isAlreadyQueuedNotification) {
       this.notifications.push({ title: title as string, text: text as string });
-      await this.sendToChannel(channelId, ':loudspeaker: **Nova obavijest** :loudspeaker: @here', embeds);
+      await this.sendToChannel(channelId, ':loudspeaker: **Nova obavijest** :loudspeaker: ', embeds);
     }
   }
 
-  async sendToChannel(channelId: string | TextChannel, messageContent: string, embeds: MessageEmbed | MessageEmbed[] = []) {
-    let messageOptions: {[key: string]: any} = {
-      ephemeral: true,
+  async getChannelById(channelId: string): Promise<TextChannel> {
+    let channel = await this.guild.channels.fetch(channelId);
+    if (!channel) throw new Error(`Channel[id=${channelId}] does not exist`);
+    return channel as TextChannel;
+  }
+
+  async sendToChannel(
+    channelId: string | TextChannel, 
+    messageContent: string, 
+    embeds: MessageEmbed | MessageEmbed[] = []
+  ) {
+    let messageOptions: DiscordJS.MessageOptions = {
       content: messageContent,
       embeds: Array.isArray(embeds) ? embeds : [embeds]
     };
     if (typeof channelId === 'string') {
-      let channel: TextChannel = this.guild.channels.cache.get(channelId) as TextChannel;
+      let channel = await this.getChannelById(channelId)!;
       if (messageContent === '') delete messageOptions['content'];
       await channel.send(messageOptions);
     } else {
@@ -62,37 +100,40 @@ class DiscordClientService {
     }
   }
 
-  memberToDiscordUserMapperFn = (m: any) => {
-    let nickname = m.nickname || m.user.username;
-    let roles: Role[] = m._roles || [];
-    let _id = m.user.id;
-    let bot = m.user.bot;
-    let discriminator = m.user.discriminator;
-    let username = m.user.username;
-    let fullUsername = `${username}#${discriminator}`;
-    let redovni = roles.includes(Role.REDOVNI);
-    let verified = roles
-      .filter(r => Object
+  getGuildMemberRoles = (m: DiscordJS.GuildMember): Role[] => {
+    return m.roles.cache.map(role => {
+      let roleNameUppercase = role.name.toUpperCase();
+      return Role[roleNameUppercase as keyof typeof Role]
+    })
+  }
+
+  memberToDiscordUserMapperFn = (m: DiscordJS.GuildMember) => {
+    let roles = this.getGuildMemberRoles(m);
+    return {
+      _id: m.user.id, 
+      bot: m.user.bot,
+      discriminator: m.user.discriminator,
+      nickname: m.nickname || m.user.username,
+      roles: roles,
+      username: m.user.username,
+      fullUsername: `${m.user.username}#${m.user.discriminator}`,
+      redovni: roles.includes(Role.REDOVNI),
+      verified: roles
+        .filter(r => Object
         .values(Role)
         .includes(r))
-      .length > 0;
-    return {
-      _id, 
-      bot,
-      discriminator,
-      nickname,
-      roles,
-      username,
-      fullUsername,
-      redovni,
-      verified
+      .length > 0
     }
   }
 
+  async getAllGuildMembers(): Promise<DiscordJS.GuildMember[]> {
+    let membersCollection = await this.guild.members.fetch();
+    return membersCollection.map(member => member);
+  }
+
   async getAllDiscordUsers(): Promise<IDiscordUser[]> {
-    let members = await this.guild?.members.fetch() || [];
-    let membersArray = Array.from(members);
-    return membersArray.map(l => this.memberToDiscordUserMapperFn(l[1]));
+    let guildMembers = await this.getAllGuildMembers();
+    return guildMembers.map(this.memberToDiscordUserMapperFn);
   }
 
   on(event: Event) {

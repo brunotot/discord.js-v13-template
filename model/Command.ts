@@ -1,10 +1,10 @@
 import { CacheType, CommandInteraction } from "discord.js";
-import path from 'path';
-import fs from 'fs';
+import ImportUtils from "../util/ImportUtils";
 
 const COMMAND_HANDLERS_FOLDER = "./../commandhandler";
 
-class Command {
+export default class Command {
+  private static configuredCommands: Command[] = [];
   config: any;
   callback: (options: CommandInteraction<CacheType>) => Promise<any>;
 
@@ -17,16 +17,9 @@ class Command {
   }
 
   static async getConfiguredCommands(): Promise<Command[]> {
-    let configuredCommands: Command[] = [];
-    const normalizedPathCommandHandlerFolder = path.join(__dirname, COMMAND_HANDLERS_FOLDER);
-    let commandHandlerFiles = fs.readdirSync(normalizedPathCommandHandlerFolder);
-    for (let commandHandlerFile of commandHandlerFiles) {
-      let commandFileLocation = `${COMMAND_HANDLERS_FOLDER}/${commandHandlerFile}`;
-      const res = await import(commandFileLocation);
-      configuredCommands.push(res.default);
-    }
+    if (Command.configuredCommands.length > 0) return Command.configuredCommands;
+    let configuredCommands = await ImportUtils.getConfiguredImports<Command>(COMMAND_HANDLERS_FOLDER);
+    Command.configuredCommands = configuredCommands;
     return configuredCommands;
   }
 }
-
-export default Command;

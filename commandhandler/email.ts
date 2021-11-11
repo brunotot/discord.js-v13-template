@@ -1,4 +1,4 @@
-import DiscordJS, { ColorResolvable, MessageEmbed } from 'discord.js';
+import DiscordJS from 'discord.js';
 import { ChannelTypes } from 'discord.js/typings/enums';
 import Command from '../model/Command';
 import { CommandName } from '../model/CommandName';
